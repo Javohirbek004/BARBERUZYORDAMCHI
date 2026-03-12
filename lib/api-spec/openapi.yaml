@@ -1,22 +1,32 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Barber.uz CRM API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: clients
+    description: Client management
+  - name: bookings
+    description: Booking management
+  - name: services
+    description: Service management
+  - name: stats
+    description: Statistics and analytics
+  - name: settings
+    description: User settings
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +34,542 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/register:
+    post:
+      operationId: registerUser
+      tags: [auth]
+      summary: Register a new barber
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: Registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Username already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: loginUser
+      tags: [auth]
+      summary: Login with username and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logoutUser
+      tags: [auth]
+      summary: Logout current user
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags: [auth]
+      summary: Get current authenticated user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/telegram-status/{userId}:
+    get:
+      operationId: getTelegramStatus
+      tags: [auth]
+      summary: Check if user has verified Telegram
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Telegram verification status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TelegramStatus"
+
+  /auth/telegram-verify:
+    post:
+      operationId: verifyTelegram
+      tags: [auth]
+      summary: Webhook for Telegram bot to verify user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TelegramVerifyRequest"
+      responses:
+        "200":
+          description: Verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /clients:
+    get:
+      operationId: listClients
+      tags: [clients]
+      summary: List all clients for the current barber
+      parameters:
+        - name: filter
+          in: query
+          schema:
+            type: string
+            enum: [all, regular, new, blacklist]
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: List of clients
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientListResponse"
+    post:
+      operationId: createClient
+      tags: [clients]
+      summary: Add a new client
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateClientRequest"
+      responses:
+        "201":
+          description: Client created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+
+  /clients/{clientId}:
+    get:
+      operationId: getClient
+      tags: [clients]
+      summary: Get a client by ID
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Client detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updateClient
+      tags: [clients]
+      summary: Update client info
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateClientRequest"
+      responses:
+        "200":
+          description: Updated client
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+    delete:
+      operationId: deleteClient
+      tags: [clients]
+      summary: Delete client
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /bookings:
+    get:
+      operationId: listBookings
+      tags: [bookings]
+      summary: List bookings
+      parameters:
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, confirmed, completed, cancelled]
+        - name: clientId
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of bookings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingListResponse"
+    post:
+      operationId: createBooking
+      tags: [bookings]
+      summary: Create a new booking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBookingRequest"
+      responses:
+        "201":
+          description: Booking created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /bookings/{bookingId}:
+    get:
+      operationId: getBooking
+      tags: [bookings]
+      summary: Get a booking by ID
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Booking detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+    put:
+      operationId: updateBooking
+      tags: [bookings]
+      summary: Update booking status or details
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBookingRequest"
+      responses:
+        "200":
+          description: Updated booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+    delete:
+      operationId: deleteBooking
+      tags: [bookings]
+      summary: Delete booking
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /services:
+    get:
+      operationId: listServices
+      tags: [services]
+      summary: List barber's services
+      responses:
+        "200":
+          description: List of services
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceListResponse"
+    post:
+      operationId: createService
+      tags: [services]
+      summary: Create a new service
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateServiceRequest"
+      responses:
+        "201":
+          description: Service created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Service"
+
+  /services/{serviceId}:
+    put:
+      operationId: updateService
+      tags: [services]
+      summary: Update a service
+      parameters:
+        - name: serviceId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateServiceRequest"
+      responses:
+        "200":
+          description: Updated service
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Service"
+    delete:
+      operationId: deleteService
+      tags: [services]
+      summary: Delete a service
+      parameters:
+        - name: serviceId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /stats/dashboard:
+    get:
+      operationId: getDashboardStats
+      tags: [stats]
+      summary: Get dashboard statistics
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /stats/analytics:
+    get:
+      operationId: getAnalytics
+      tags: [stats]
+      summary: Get analytics data
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [week, month, year]
+            default: month
+      responses:
+        "200":
+          description: Analytics data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Analytics"
+
+  /settings/profile:
+    get:
+      operationId: getProfile
+      tags: [settings]
+      summary: Get barber profile settings
+      responses:
+        "200":
+          description: Profile settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+    put:
+      operationId: updateProfile
+      tags: [settings]
+      summary: Update profile settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileRequest"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+
+  /settings/password:
+    put:
+      operationId: updatePassword
+      tags: [settings]
+      summary: Update password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePasswordRequest"
+      responses:
+        "200":
+          description: Password updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400":
+          description: Wrong old password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /settings/notifications:
+    get:
+      operationId: getNotificationSettings
+      tags: [settings]
+      summary: Get notification settings
+      responses:
+        "200":
+          description: Notification settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationSettings"
+    put:
+      operationId: updateNotificationSettings
+      tags: [settings]
+      summary: Update notification settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationSettings"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationSettings"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +577,530 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+      required: [error]
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required: [success]
+
+    RegisterRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+        username:
+          type: string
+          minLength: 3
+        brandName:
+          type: string
+          nullable: true
+        password:
+          type: string
+          minLength: 6
+        mode:
+          type: string
+          enum: [solo, team]
+        lang:
+          type: string
+          enum: [uz, ru]
+          default: uz
+      required: [name, username, password, mode]
+
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required: [username, password]
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        token:
+          type: string
+        telegramVerified:
+          type: boolean
+      required: [user, token, telegramVerified]
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        username:
+          type: string
+        brandName:
+          type: string
+          nullable: true
+        mode:
+          type: string
+          enum: [solo, team]
+        lang:
+          type: string
+          enum: [uz, ru]
+        telegramVerified:
+          type: boolean
+        telegramId:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, name, username, mode, lang, telegramVerified, createdAt]
+
+    TelegramStatus:
+      type: object
+      properties:
+        verified:
+          type: boolean
+        telegramId:
+          type: string
+          nullable: true
+      required: [verified]
+
+    TelegramVerifyRequest:
+      type: object
+      properties:
+        userId:
+          type: string
+        telegramId:
+          type: string
+        telegramUsername:
+          type: string
+          nullable: true
+        secret:
+          type: string
+      required: [userId, telegramId, secret]
+
+    Client:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        barberId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        phone:
+          type: string
+          nullable: true
+        telegramId:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [regular, new, blacklist]
+        visitCount:
+          type: integer
+        totalSpent:
+          type: number
+        lastVisit:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, barberId, name, status, visitCount, totalSpent, createdAt]
+
+    CreateClientRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        phone:
+          type: string
+          nullable: true
+        telegramId:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [regular, new, blacklist]
+          default: new
+      required: [name]
+
+    UpdateClientRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+          nullable: true
+        telegramId:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [regular, new, blacklist]
+
+    ClientListResponse:
+      type: object
+      properties:
+        clients:
+          type: array
+          items:
+            $ref: "#/components/schemas/Client"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+      required: [clients, total, page, limit]
+
+    Booking:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        barberId:
+          type: string
+          format: uuid
+        clientId:
+          type: string
+          format: uuid
+          nullable: true
+        clientName:
+          type: string
+        serviceId:
+          type: string
+          format: uuid
+          nullable: true
+        serviceName:
+          type: string
+          nullable: true
+        date:
+          type: string
+          format: date
+        startTime:
+          type: string
+        endTime:
+          type: string
+        price:
+          type: number
+        status:
+          type: string
+          enum: [pending, confirmed, completed, cancelled]
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, barberId, clientName, date, startTime, endTime, price, status, createdAt]
+
+    CreateBookingRequest:
+      type: object
+      properties:
+        clientId:
+          type: string
+          nullable: true
+        clientName:
+          type: string
+        serviceId:
+          type: string
+          nullable: true
+        date:
+          type: string
+          format: date
+        startTime:
+          type: string
+        endTime:
+          type: string
+        price:
+          type: number
+        notes:
+          type: string
+          nullable: true
+      required: [clientName, date, startTime, endTime, price]
+
+    UpdateBookingRequest:
+      type: object
+      properties:
+        clientName:
+          type: string
+        serviceId:
+          type: string
+          nullable: true
+        date:
+          type: string
+          format: date
+        startTime:
+          type: string
+        endTime:
+          type: string
+        price:
+          type: number
+        status:
+          type: string
+          enum: [pending, confirmed, completed, cancelled]
+        notes:
+          type: string
+          nullable: true
+
+    BookingListResponse:
+      type: object
+      properties:
+        bookings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Booking"
+        total:
+          type: integer
+      required: [bookings, total]
+
+    Service:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        barberId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        nameRu:
+          type: string
+          nullable: true
+        duration:
+          type: integer
+          description: Duration in minutes
+        price:
+          type: number
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, barberId, name, duration, price, isActive, createdAt]
+
+    CreateServiceRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        nameRu:
+          type: string
+          nullable: true
+        duration:
+          type: integer
+          minimum: 5
+        price:
+          type: number
+          minimum: 0
+      required: [name, duration, price]
+
+    UpdateServiceRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        nameRu:
+          type: string
+          nullable: true
+        duration:
+          type: integer
+        price:
+          type: number
+        isActive:
+          type: boolean
+
+    ServiceListResponse:
+      type: object
+      properties:
+        services:
+          type: array
+          items:
+            $ref: "#/components/schemas/Service"
+      required: [services]
+
+    DashboardStats:
+      type: object
+      properties:
+        scans:
+          type: integer
+        clicks:
+          type: integer
+        todayBookings:
+          type: integer
+        todayRevenue:
+          type: number
+        weekBookings:
+          type: integer
+        weekRevenue:
+          type: number
+        totalClients:
+          type: integer
+        newClientsThisMonth:
+          type: integer
+      required: [scans, clicks, todayBookings, todayRevenue, weekBookings, weekRevenue, totalClients, newClientsThisMonth]
+
+    Analytics:
+      type: object
+      properties:
+        period:
+          type: string
+        revenueChart:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChartDataPoint"
+        bookingsChart:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChartDataPoint"
+        topServices:
+          type: array
+          items:
+            $ref: "#/components/schemas/ServiceStat"
+        totalRevenue:
+          type: number
+        totalBookings:
+          type: integer
+        averageCheck:
+          type: number
+      required: [period, revenueChart, bookingsChart, topServices, totalRevenue, totalBookings, averageCheck]
+
+    ChartDataPoint:
+      type: object
+      properties:
+        label:
+          type: string
+        value:
+          type: number
+      required: [label, value]
+
+    ServiceStat:
+      type: object
+      properties:
+        name:
+          type: string
+        count:
+          type: integer
+        revenue:
+          type: number
+      required: [name, count, revenue]
+
+    Profile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        username:
+          type: string
+        brandName:
+          type: string
+          nullable: true
+        mode:
+          type: string
+          enum: [solo, team]
+        lang:
+          type: string
+          enum: [uz, ru]
+        workingHoursStart:
+          type: string
+          nullable: true
+        workingHoursEnd:
+          type: string
+          nullable: true
+        telegramVerified:
+          type: boolean
+        telegramUsername:
+          type: string
+          nullable: true
+        bio:
+          type: string
+          nullable: true
+        avatarUrl:
+          type: string
+          nullable: true
+      required: [id, name, username, mode, lang, telegramVerified]
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        brandName:
+          type: string
+          nullable: true
+        mode:
+          type: string
+          enum: [solo, team]
+        lang:
+          type: string
+          enum: [uz, ru]
+        workingHoursStart:
+          type: string
+          nullable: true
+        workingHoursEnd:
+          type: string
+          nullable: true
+        bio:
+          type: string
+          nullable: true
+
+    UpdatePasswordRequest:
+      type: object
+      properties:
+        oldPassword:
+          type: string
+        newPassword:
+          type: string
+          minLength: 6
+      required: [oldPassword, newPassword]
+
+    NotificationSettings:
+      type: object
+      properties:
+        newBooking:
+          type: boolean
+        cancellation:
+          type: boolean
+        reminders:
+          type: boolean
+        reminderMinutes:
+          type: integer
+          default: 30
+      required: [newBooking, cancellation, reminders]

@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Barber.uz CRM"
+version = "1.0.0"
+id = "artifacts/barber-uz"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+localPort = 20202
+name = "web"
+paths = ["/"]
+
+[services.development]
+run = "pnpm --filter @workspace/barber-uz run dev"
+
+[services.env]
+PORT = "20202"
+BASE_PATH = "/"
+
+[services.production]
+build = ["pnpm", "--filter", "@workspace/barber-uz", "run", "build"]
+publicDir = "artifacts/barber-uz/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"

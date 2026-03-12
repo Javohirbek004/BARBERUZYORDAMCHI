@@ -1,0 +1,21 @@
+packages:
+  "framer-motion": "For page transitions, subtle entry animations, and polished micro-interactions"
+  "recharts": "For rendering beautiful analytics charts in the dashboard and statistics pages"
+  "date-fns": "For formatting dates and times in the calendar and bookings lists"
+  "clsx": "For conditional class merging"
+  "tailwind-merge": "For merging tailwind classes safely"
+  "@hookform/resolvers": "Zod validation for forms"
+  "zod": "Schema validation for client-side forms"
+
+images:
+  - path: "artifacts/barber-uz/public/images/hero-barber.png"
+    description: "Dark, moody, premium barbershop interior with cinematic warm amber lighting highlighting leather chairs and mirrors, very subtle and abstract."
+    aspect_ratio: "16:9"
+  - path: "artifacts/barber-uz/public/images/logo.png"
+    description: "Minimalist, luxury geometric logo mark for a barbershop in golden amber on a solid black transparent background."
+    aspect_ratio: "1:1"
+
+notes:
+  - All JWT auth state is managed via `/api/auth/me` checks and assumed handled by `customFetch` or cookies.
+  - The UI uses Framer Motion for premium fluid entry animations.
+  - Using wouter for routing. All strings are fully localized via a custom context provider.
