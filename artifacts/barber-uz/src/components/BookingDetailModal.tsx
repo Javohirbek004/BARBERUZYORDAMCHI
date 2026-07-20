@@ -220,6 +220,7 @@ export function BookingDetailModal({
     isSaved,
     textareaRef,
     placeholder,
+    emptyLabel = "Eslatma qo'shilmagan",
     onEditEnter,
     onChange,
     onSave,
@@ -230,8 +231,9 @@ export function BookingDetailModal({
     isEditing: boolean;
     isSaving: boolean;
     isSaved: boolean;
-    textareaRef: React.RefObject<HTMLTextAreaElement>;
+    textareaRef: React.RefObject<HTMLTextAreaElement | null>;
     placeholder: string;
+    emptyLabel?: string;
     onEditEnter: () => void;
     onChange: (v: string) => void;
     onSave: () => void;
@@ -331,7 +333,7 @@ export function BookingDetailModal({
             {value ? (
               <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{value}</p>
             ) : (
-              <p className="text-sm text-muted-foreground/40">{placeholder}</p>
+              <p className="text-sm text-muted-foreground/40 italic">{emptyLabel}</p>
             )}
           </motion.div>
         )}
